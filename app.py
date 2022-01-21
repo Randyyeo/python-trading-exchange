@@ -1,7 +1,4 @@
 
-from pickletools import markobject
-
-
 orders = []
 status = False
 buy = {}
@@ -10,19 +7,22 @@ last = {}
 mkt_buy_index = 1
 mkt_sell_index = 1
 
+# This function sorts the orders in terms of priority. 
+# Market orders have the most priority followed by limit orders with highest price for 'buy' and lowest price for 'sell'
 def sort(new_order, type, index):
-    
     if type == "sell":
+        # Check if stock is in the queue
         if new_order.getStock() not in sell:
             sell[new_order.getStock()] = [new_order]
         else:
+            # Check if stock is market or limit order
             arr = sell[new_order.getStock()]
             if new_order.getType() == "MKT":
                 arr.insert(index, new_order)
                 index +=  1
-                
             else:
                 status = False
+                # Sorting based on the 'sell' priority mentioned above
                 for i in range(len(arr[index:])):
                     if new_order.getPrice() < arr[i].getPrice():
                         status = True
@@ -30,25 +30,20 @@ def sort(new_order, type, index):
                         break
                 if not status:
                     arr.append(new_order)
-                """ if new_order.getStock() not in ask:
-                    ask[new_order.getStock()] = new_order.getPrice()
-                else:
-                    if ask[new_order.getStock()] > new_order.getPrice():
-                        ask[new_order.getStock()] = new_order.getPrice() """
         return index
     else:
+        # Check if stock is in the queue
         if new_order.getStock() not in buy:
             buy[new_order.getStock()] = [new_order]
-            
         else:
+            # Check if stock is market or limit order
             arr = buy[new_order.getStock()]
             if new_order.getType() == "MKT":
                 arr.insert(index, new_order)
                 index +=  1
-                
-                
             else:
                 status = False
+                # Sorting based on the 'buy' priority mentioned above
                 for i in range(len(arr)):
                     if new_order.getPrice() > arr[i].getPrice():
                         arr.insert(i, new_order)
@@ -56,87 +51,122 @@ def sort(new_order, type, index):
                         break
                 if not status:
                     arr.append(new_order)
-                    
-                """ if new_order.getStock() not in bid:
-                    bid[new_order.getStock()] = new_order.getPrice()
-                else:
-                    if bid[new_order.getStock()] < new_order.getPrice():
-                        bid[new_order.getStock()] = new_order.getPrice() """
         return index
 
-def perform_transaction(new_order, type):
+# Performs limit orders with cases where the opposite orders are either market or limit orders
+def perform_transaction_limit(new_order, type):
     if type == "buy":
         i = 0
         if new_order.getStock() in sell:
             arr = sell[new_order.getStock()]
             while i < len(arr):
-                    if arr[i].getType() == "MKT":
-                        if new_order.getAmount() > arr[i].getAmount():
-                            new_order.setCurrent(arr[i].getAmount())
-                            arr[i].setCurrent(arr[i].getAmount())
-                            arr[i].setPrice(new_order.getPrice())
-                            
-                            last[new_order.getStock()] = new_order.getPrice()
-                            
+                if arr[i].getType() == "MKT":
+                    # Transaction takes place till the
+                    if new_order.getRemaining() > arr[i].getRemaining():
+                        new_order.setCurrent(arr[i].getRemaining())
+                        arr[i].setCurrent(arr[i].getRemaining())
+                        arr[i].setPrice(new_order.getPrice())
+                        last[new_order.getStock()] = new_order.getPrice()
+                        arr.pop(i)
+                    else:
+                        arr[i].setCurrent(new_order.getRemaining())
+                        new_order.setCurrent(new_order.getRemaining())
+                        arr[i].setPrice(new_order.getPrice())
+                        last[new_order.getStock()] = new_order.getPrice()
+                        break
+
+                else:
+                    # Order is only executed when buy price is more than sell price
+                    if new_order.getPrice() >= arr[i].getPrice():
+                        if new_order.getRemaining() > arr[i].getRemaining():
+                            new_order.setCurrent(arr[i].getRemaining())
+                            arr[i].setCurrent(arr[i].getRemaining())
+                            last[new_order.getStock()] = arr[i].getPrice()
                             arr.pop(i)
                         else:
-                            arr[i].setCurrent(new_order.getAmount())
-                            new_order.setCurrent(new_order.getAmount())
-                            arr[i].setPrice(new_order.getPrice())
-                            last[new_order.getStock()] = new_order.getPrice()
+                            arr[i].setCurrent(new_order.getRemaining())
+                            new_order.setCurrent(new_order.getRemaining())
+                            last[new_order.getStock()] = arr[i].getPrice()
                             break
-                        
                     else:
-                        if new_order.getPrice() >= arr[i].getPrice():
-                            if new_order.getAmount() > arr[i].getAmount():
-                                new_order.setCurrent(arr[i].getAmount())
-                                arr[i].setCurrent(arr[i].getAmount())
-                                last[new_order.getStock()] = arr[i].getPrice()
-                                arr.pop(i)
-                            else:
-                                arr[i].setCurrent(new_order.getAmount())
-                                new_order.setCurrent(new_order.getAmount())
-                                last[new_order.getStock()] = arr[i].getPrice()
-                                break
-                        else:
-                            break
-                    print(arr)
-            
+                        break        
     else:
         if new_order.getStock() in buy:
             arr = buy[new_order.getStock()]
             i = 0
             while i < len(arr):
                     if arr[i].getType() == "MKT":
-                        if new_order.getAmount() > arr[i].getAmount():
+                        if new_order.getRemaining() > arr[i].getRemaining():
                             
-                            new_order.setCurrent(arr[i].getAmount())
-                            arr[i].setCurrent(arr[i].getAmount())
+                            new_order.setCurrent(arr[i].getRemaining())
+                            arr[i].setCurrent(arr[i].getRemaining())
                             arr[i].setPrice(new_order.getPrice())
                             last[new_order.getStock()] = new_order.getPrice()
                             arr.pop(i)
                         else:
-                            arr[i].setCurrent(new_order.getAmount())
-                            new_order.setCurrent(new_order.getAmount())
+                            arr[i].setCurrent(new_order.getRemaining())
+                            new_order.setCurrent(new_order.getRemaining())
                             arr[i].setPrice(new_order.getPrice())
                             last[new_order.getStock()] = new_order.getPrice()
                             break
                         
                     else:
                         if new_order.getPrice() <= arr[i].getPrice():
-                            if new_order.getAmount() > arr[i].getAmount():
-                                new_order.setCurrent(arr[i].getAmount())
-                                arr[i].setCurrent(arr[i].getAmount())
+                            if new_order.getRemaining() > arr[i].getRemaining():
+                                new_order.setCurrent(arr[i].getRemaining())
+                                arr[i].setCurrent(arr[i].getRemaining())
                                 last[new_order.getStock()] = new_order.getPrice()
                                 arr.pop(i)
                             else:
-                                arr[i].setCurrent(new_order.getAmount())
-                                new_order.setCurrent(new_order.getAmount())
+                                arr[i].setCurrent(new_order.getRemaining())
+                                new_order.setCurrent(new_order.getRemaining())
                                 last[new_order.getStock()] = new_order.getPrice()
                                 break
                         else:
                             break
                 
+def perform_transaction_market(new_order, type):
+    if type == "buy":
+        i = 0
+        if new_order.getStock() in sell:
+            arr = sell[new_order.getStock()]
+            while i < len(arr):
+                if arr[i].getType() != "MKT":   
+                    if new_order.getRemaining() > arr[i].getRemaining():
+                        new_order.setCurrent(arr[i].getRemaining())
+                        arr[i].setCurrent(arr[i].getRemaining())
+                        new_order.setPrice(arr[i].getPrice()) 
+                        last[new_order.getStock()] = arr[i].getPrice() 
+                        arr.pop(i)
+                    else:
+                        arr[i].setCurrent(new_order.getRemaining())
+                        new_order.setCurrent(new_order.getRemaining())
+                        new_order.setPrice(arr[i].getPrice())  
+                        last[order.getStock()] = arr[i].getPrice() 
+                        break
+                else:
+                    i+=1
+    else:
+        i = 0
+        if new_order.getStock() in buy:
+            arr = buy[new_order.getStock()]
+            while i < len(arr):
+                if arr[i].getType() != "MKT":
+                    if new_order.getRemaining() > arr[i].getRemaining():
+                        new_order.setCurrent(arr[i].getRemaining())
+                        arr[i].setCurrent(arr[i].getRemaining())
+                        new_order.setPrice(new_order.getPrice())    
+                        last[new_order.getStock()] = arr[i].getPrice()
+                        arr.pop(i) 
+                    else:
+                        arr[i].setCurrent(new_order.getRemaining())
+                        new_order.setCurrent(order.getRemaining())
+                        new_order.setPrice(new_order.getPrice())
+                        last[new_order.getStock()] = arr[i].getPrice() 
+                        break  
+                else:
+                    i+=1
+                        
 
 class Order:
     def __init__(self, action, stock, type, price, amount,):
@@ -153,18 +183,18 @@ class Order:
             return f"{self.action} {self.stock} {self.type} {self.current}/{self.amount} {self.status}"
         else:
             return f"{self.action} {self.stock} {self.type} ${str(self.price)} {self.current}/{self.amount} {self.status}"
+
     def getCurrent(self):
         return self.current
 
     def setCurrent(self, result):
-        
         self.current += result
         if self.current == self.amount:
             self.status = "FILLED"
         elif self.current > 0:
             self.status = "PARTIAL"
         
-    def getAmount(self):
+    def getRemaining(self):
         return self.amount - self.current
 
     def getPrice(self):
@@ -182,6 +212,7 @@ class Order:
     def getStock(self):
         return self.stock
 
+# Actual block of code run 
 
 while status == False:
 
@@ -189,95 +220,70 @@ while status == False:
     list_str = input_string.split(" ")
     try:
         action = list_str[0]
+        # View Orders
         if action == "VIEW":
             i = 1
             for order in orders:
                 print(f"{i}. {order.logg()}")
                 i += 1
-                
+        # Buy Orders        
         elif action == "BUY":
             stock = list_str[1]
             type = list_str[2]
+            # Buy Limit Order
             if type == "LMT":
-                price = round(float(list_str[3][1:]), 2)
-                amount = int(list_str[4])
-                order = Order(action, stock, type, price, amount)
-                perform_transaction(order, "buy")
-                if order.getStatus() != "FILLED":
-                    index = sort(order, "buy", mkt_buy_index)
-                    mkt_buy_index = index
-                
-                orders.append(order)
-                print(f"You have placed a limit buy order for {amount} {stock} shares at ${price} each")
+                # Error command validations
+                if "$" not in list_str[3] or len(list_str) != 5:
+                    status = True
+                    print(f"Your limit order is not in the correct format.")
+                else:
+                    price = round(float(list_str[3][1:]), 2)
+                    amount = int(list_str[4])
+                    order = Order(action, stock, type, price, amount)
+                    perform_transaction_limit(order, "buy")
+                    if order.getStatus() != "FILLED":
+                        index = sort(order, "buy", mkt_buy_index)
+                        mkt_buy_index = index
+                    
+                    orders.append(order)
+                    print(f"You have placed a limit buy order for {amount} {stock} shares at ${price} each")
+            # Buy Market Order
             else:
                 amount = int(list_str[3])
                 order = Order(action, stock, type, None, amount)
-                i = 0
-                if order.getStock() in sell:
-                    arr = sell[order.getStock()]
-                    while i < len(arr):
-                        if arr[i].getType() != "MKT":   
-                            if order.getAmount() > arr[i].getAmount():
-                                arr[i].setCurrent(arr[i].getAmount())
-                                order.setCurrent(arr[i].getAmount())
-                                order.setPrice(arr[i].getPrice()) 
-                                last[order.getStock()] = arr[i].getPrice() 
-                                arr.pop(i)
-                            else:
-                                arr[i].setCurrent(order.getAmount())
-                                order.setCurrent(order.getAmount())
-                                order.setPrice(arr[i].getPrice())  
-                                last[order.getStock()] = arr[i].getPrice() 
-                                break
-                        else:
-                            i+=1
-                        
+                perform_transaction_market(order, "buy")
                         
                 if order.getStatus() != "FILLED":
-                    print(mkt_buy_index)
                     index = sort(order, "buy", mkt_buy_index)
-                    print(index)
                     mkt_buy_index = index
                 orders.append(order)
                 print(f"You have placed a market order for {amount} {stock} shares")
             
-
+        # Sell Orders
         elif action == "SELL":
             stock = list_str[1]
             type = list_str[2]
+            # Sell Limit Order
             if type == "LMT":
-                price = round(float(list_str[3][1:]), 2)
-                amount = int(list_str[4])
-                order = Order(action, stock, type, price, amount)
-                perform_transaction(order, "sell")
-                if order.getStatus() != "FILLED":
-                    index = sort(order, "sell", mkt_sell_index)
-                    mkt_sell_index = index
-                orders.append(order)
-                print(f"You have placed a limit sell order for {amount} {stock} shares at ${price} each")
+                # Error command validations
+                if "$" not in list_str[3] or len(list_str) != 5:
+                    status = True
+                    print(f"Your limit order is not in the correct format.")
+                else:
+                    price = round(float(list_str[3][1:]), 2)
+                    amount = int(list_str[4])
+                    order = Order(action, stock, type, price, amount)
+                    perform_transaction_limit(order, "sell")
+                    if order.getStatus() != "FILLED":
+                        index = sort(order, "sell", mkt_sell_index)
+                        mkt_sell_index = index
+                    orders.append(order)
+                    print(f"You have placed a limit sell order for {amount} {stock} shares at ${price} each")
+            # Sell Market Order        
             else:
                 amount = int(list_str[3])
                 order = Order(action, stock, type, None, amount)
-                i = 0
-                if order.getStock() in buy:
-                    arr = buy[order.getStock()]
-                    while i < len(arr):
-                            if arr[i].getType() != "MKT":
-                                if order.getAmount() > arr[i].getAmount():
-                                    arr[i].setCurrent(arr[i].getAmount())
-                                    order.setCurrent(arr[i].getAmount())
-                                    order.setPrice(order.getPrice())    
-                                    last[order.getStock()] = arr[i].getPrice()
-                                    arr.pop(i) 
-                                else:
-                                    arr[i].setCurrent(order.getAmount())
-                                    order.setCurrent(order.getAmount())
-                                    order.setPrice(order.getPrice())
-                                    last[order.getStock()] = arr[i].getPrice() 
-                                    break  
-                            else:
-                                i+=1
-                        
+                perform_transaction_market(order, "sell")        
                 if order.getStatus() != "FILLED":
                     index = sort(order, "sell", mkt_sell_index)
                     mkt_sell_index = index
@@ -285,10 +291,10 @@ while status == False:
                 print(f"You have placed a market order for {amount} {stock} shares")
             
             
-
+        # Exit Client
         elif action == "QUIT":
             status = True
-            
+        # Quote orders    
         elif action == "QUOTE":
             
             stock = list_str[1]
@@ -301,7 +307,7 @@ while status == False:
                 bid_price = "0.00"
             
             if stock in sell and len(sell[stock]) != 0:
-                if buy[stock][0].getPrice() != None:
+                if sell[stock][0].getPrice() != None:
                     ask_price = float(sell[stock][0].getPrice())
                 else:
                     ask_price = "0.00"
