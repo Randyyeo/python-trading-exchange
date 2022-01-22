@@ -243,110 +243,110 @@ while status == False:
 
     input_string = input("ACTION: ")
     list_str = input_string.split(" ")
-    """ try: """
-    action = list_str[0]
-    # View Orders
-    if action == "VIEW":
-        i = 1
-        for order in orders:
-            print(f"{i}. {order.logg()}")
-            i += 1
-    # Buy Orders        
-    elif action == "BUY":
-        stock = list_str[1]
-        type = list_str[2]
-        # Buy Limit Order
-        if type == "LMT":
-            # Error command validations
-            if "$" not in list_str[3] or len(list_str) != 5:
-                print(f"Your limit order is not in the correct format.")
+    try:
+        action = list_str[0]
+        # View Orders
+        if action == "VIEW":
+            i = 1
+            for order in orders:
+                print(f"{i}. {order.logg()}")
+                i += 1
+        # Buy Orders        
+        elif action == "BUY":
+            stock = list_str[1]
+            type = list_str[2]
+            # Buy Limit Order
+            if type == "LMT":
+                # Error command validations
+                if "$" not in list_str[3] or len(list_str) != 5:
+                    print(f"Your limit order is not in the correct format.")
+                else:
+                    price = round(float(list_str[3][1:]), 2)
+                    amount = int(list_str[4])
+                    order = Order(action, stock, type, price, amount)
+                    perform_transaction_limit(order, "buy")
+                    if order.getStatus() != "FILLED":
+                        index = sort(order, "buy", mkt_buy_index)
+                        mkt_buy_index = index
+                    
+                    orders.append(order)
+                    order.print()
+            # Buy Market Order
             else:
-                price = round(float(list_str[3][1:]), 2)
-                amount = int(list_str[4])
-                order = Order(action, stock, type, price, amount)
-                perform_transaction_limit(order, "buy")
+                amount = int(list_str[3])
+                order = Order(action, stock, type, None, amount)
+                perform_transaction_market(order, "buy")
+                        
                 if order.getStatus() != "FILLED":
                     index = sort(order, "buy", mkt_buy_index)
                     mkt_buy_index = index
-                
                 orders.append(order)
                 order.print()
-        # Buy Market Order
-        else:
-            amount = int(list_str[3])
-            order = Order(action, stock, type, None, amount)
-            perform_transaction_market(order, "buy")
-                    
-            if order.getStatus() != "FILLED":
-                index = sort(order, "buy", mkt_buy_index)
-                mkt_buy_index = index
-            orders.append(order)
-            order.print()
-        
-    # Sell Orders
-    elif action == "SELL":
-        stock = list_str[1]
-        type = list_str[2]
-        # Sell Limit Order
-        if type == "LMT":
-            # Error command validations
-            if "$" not in list_str[3] or len(list_str) != 5:
-                print(f"Your limit order is not in the correct format.")
+            
+        # Sell Orders
+        elif action == "SELL":
+            stock = list_str[1]
+            type = list_str[2]
+            # Sell Limit Order
+            if type == "LMT":
+                # Error command validations
+                if "$" not in list_str[3] or len(list_str) != 5:
+                    print(f"Your limit order is not in the correct format.")
+                else:
+                    price = round(float(list_str[3][1:]), 2)
+                    amount = int(list_str[4])
+                    order = Order(action, stock, type, price, amount)
+                    perform_transaction_limit(order, "sell")
+                    if order.getStatus() != "FILLED":
+                        index = sort(order, "sell", mkt_sell_index)
+                        mkt_sell_index = index
+                    orders.append(order)
+                    order.print()
+            # Sell Market Order        
             else:
-                price = round(float(list_str[3][1:]), 2)
-                amount = int(list_str[4])
-                order = Order(action, stock, type, price, amount)
-                perform_transaction_limit(order, "sell")
+                amount = int(list_str[3])
+                order = Order(action, stock, type, None, amount)
+                perform_transaction_market(order, "sell")        
                 if order.getStatus() != "FILLED":
                     index = sort(order, "sell", mkt_sell_index)
                     mkt_sell_index = index
                 orders.append(order)
                 order.print()
-        # Sell Market Order        
-        else:
-            amount = int(list_str[3])
-            order = Order(action, stock, type, None, amount)
-            perform_transaction_market(order, "sell")        
-            if order.getStatus() != "FILLED":
-                index = sort(order, "sell", mkt_sell_index)
-                mkt_sell_index = index
-            orders.append(order)
-            order.print()
-        
-        
-    # Exit Client
-    elif action == "QUIT":
-        status = True
-    # Quote orders    
-    elif action == "QUOTE":
-        
-        stock = list_str[1]
-        if stock in buy and len(buy[stock]) != 0:
-            if buy[stock][mkt_buy_index].getPrice() != None:
-                bid_price = float(buy[stock][mkt_buy_index].getPrice())
+            
+            
+        # Exit Client
+        elif action == "QUIT":
+            status = True
+        # Quote orders    
+        elif action == "QUOTE":
+            
+            stock = list_str[1]
+            if stock in buy and len(buy[stock]) != 0:
+                if buy[stock][mkt_buy_index].getPrice() != None:
+                    bid_price = float(buy[stock][mkt_buy_index].getPrice())
+                else:
+                    bid_price = "0.00"
             else:
                 bid_price = "0.00"
-        else:
-            bid_price = "0.00"
-        
-        if stock in sell and len(sell[stock]) != 0:
-            if sell[stock][mkt_sell_index].getPrice() != None:
-                ask_price = float(sell[stock][mkt_sell_index].getPrice())
+            
+            if stock in sell and len(sell[stock]) != 0:
+                if sell[stock][mkt_sell_index].getPrice() != None:
+                    ask_price = float(sell[stock][mkt_sell_index].getPrice())
+                else:
+                    ask_price = "0.00"
             else:
                 ask_price = "0.00"
-        else:
-            ask_price = "0.00"
 
-        if stock in last:
-            last_price = float(last[stock])
+            if stock in last:
+                last_price = float(last[stock])
+            else:
+                last_price = "0.00"
+            print(f"{stock} BID: ${bid_price} ASK: ${ask_price} LAST: ${last_price}")
         else:
-            last_price = "0.00"
-        print(f"{stock} BID: ${bid_price} ASK: ${ask_price} LAST: ${last_price}")
-    else:
+            print("Command not found. Do note that the commands are case sensitive")
+        
+        print()
+    except:
         print("Command not found. Do note that the commands are case sensitive")
-    
-    print()
-    """ except:
-        print("Command not found. Do note that the commands are case sensitive") """
     
 
