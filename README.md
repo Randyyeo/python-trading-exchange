@@ -48,3 +48,6 @@ VIEW ORDERS
 QUOTE FB
 ```
 
+## Assumptions
+
+If the exchange only has sell market orders and buy market orders, transactions will not run since there isn't an accurate price of which the order should execute at. This is because the app is not connected to any stock database. When a limit order is run, then will the market orders be executed.
