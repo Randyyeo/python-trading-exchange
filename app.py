@@ -1,4 +1,4 @@
-
+# data variables
 orders = []
 status = False
 buy = {}
@@ -55,21 +55,22 @@ def sort(new_order, type, index):
 
 # Performs limit orders with cases where the opposite orders are either market or limit orders
 def perform_transaction_limit(new_order, type):
+    # If the new order is a buy
     if type == "buy":
         i = 0
         if new_order.getStock() in sell:
             arr = sell[new_order.getStock()]
             while i < len(arr):
                 if arr[i].getType() == "MKT":
-                    # Transaction takes place till the
+                    # Transaction takes place but breaks when new order amount is less than the order amount in the queue 
                     if new_order.getRemaining() > arr[i].getRemaining():
-                        new_order.setCurrent(arr[i].getRemaining())
-                        arr[i].setCurrent(arr[i].getRemaining())
-                        arr[i].setPrice(new_order.getPrice())
-                        last[new_order.getStock()] = new_order.getPrice()
-                        arr.pop(i)
+                        new_order.setCurrent(arr[i].getRemaining()) # Set the new order based on the amount of the order stored in exchange
+                        arr[i].setCurrent(arr[i].getRemaining()) # Set the order stored in exchange as completed
+                        arr[i].setPrice(new_order.getPrice()) # Set price as order stored in exchange
+                        last[new_order.getStock()] = new_order.getPrice() # Storing last exchanged price
+                        arr.pop(i) # Remove from exchange since it has been completed
                     else:
-                        arr[i].setCurrent(new_order.getRemaining())
+                        arr[i].setCurrent(new_order.getRemaining()) # Since new order amount is lesser, new order is completed and the loop is broken
                         new_order.setCurrent(new_order.getRemaining())
                         arr[i].setPrice(new_order.getPrice())
                         last[new_order.getStock()] = new_order.getPrice()
@@ -91,11 +92,13 @@ def perform_transaction_limit(new_order, type):
                     else:
                         break        
     else:
+        # If the new order is a sell
         if new_order.getStock() in buy:
             arr = buy[new_order.getStock()]
             i = 0
             while i < len(arr):
                     if arr[i].getType() == "MKT":
+                        # Transaction takes place but breaks when new order amount is less than the order amount in the queue 
                         if new_order.getRemaining() > arr[i].getRemaining():
                             
                             new_order.setCurrent(arr[i].getRemaining())
@@ -111,6 +114,7 @@ def perform_transaction_limit(new_order, type):
                             break
                         
                     else:
+                        # Order is only executed when buy price is more than sell price
                         if new_order.getPrice() <= arr[i].getPrice():
                             if new_order.getRemaining() > arr[i].getRemaining():
                                 new_order.setCurrent(arr[i].getRemaining())
@@ -126,11 +130,13 @@ def perform_transaction_limit(new_order, type):
                             break
                 
 def perform_transaction_market(new_order, type):
+    # If the new order is a buy
     if type == "buy":
         i = 0
         if new_order.getStock() in sell:
             arr = sell[new_order.getStock()]
             while i < len(arr):
+                # Assumption made: Only limit orders stored in the exchange will be transacted when a market order is placed
                 if arr[i].getType() != "MKT":   
                     if new_order.getRemaining() > arr[i].getRemaining():
                         new_order.setCurrent(arr[i].getRemaining())
@@ -147,10 +153,12 @@ def perform_transaction_market(new_order, type):
                 else:
                     i+=1
     else:
+        # If the new order is a sell
         i = 0
         if new_order.getStock() in buy:
             arr = buy[new_order.getStock()]
             while i < len(arr):
+                # Assumption made: Only limit orders stored in the exchange will be transacted when a market order is placed
                 if arr[i].getType() != "MKT":
                     if new_order.getRemaining() > arr[i].getRemaining():
                         new_order.setCurrent(arr[i].getRemaining())
@@ -178,6 +186,7 @@ class Order:
         self.current = 0
         self.status = "PENDING"
 
+    # Printing out the order placed
     def logg(self):
         if self.price == None:
             return f"{self.action} {self.stock} {self.type} {self.current}/{self.amount} {self.status}"
@@ -212,6 +221,7 @@ class Order:
     def getStock(self):
         return self.stock
 
+
 # Actual block of code run 
 
 while status == False:
@@ -234,7 +244,6 @@ while status == False:
             if type == "LMT":
                 # Error command validations
                 if "$" not in list_str[3] or len(list_str) != 5:
-                    status = True
                     print(f"Your limit order is not in the correct format.")
                 else:
                     price = round(float(list_str[3][1:]), 2)
@@ -267,7 +276,6 @@ while status == False:
             if type == "LMT":
                 # Error command validations
                 if "$" not in list_str[3] or len(list_str) != 5:
-                    status = True
                     print(f"Your limit order is not in the correct format.")
                 else:
                     price = round(float(list_str[3][1:]), 2)
@@ -299,16 +307,16 @@ while status == False:
             
             stock = list_str[1]
             if stock in buy and len(buy[stock]) != 0:
-                if buy[stock][0].getPrice() != None:
-                    bid_price = float(buy[stock][0].getPrice())
+                if buy[stock][mkt_buy_index].getPrice() != None:
+                    bid_price = float(buy[stock][mkt_buy_index].getPrice())
                 else:
                     bid_price = "0.00"
             else:
                 bid_price = "0.00"
             
             if stock in sell and len(sell[stock]) != 0:
-                if sell[stock][0].getPrice() != None:
-                    ask_price = float(sell[stock][0].getPrice())
+                if sell[stock][mkt_sell_index].getPrice() != None:
+                    ask_price = float(sell[stock][mkt_sell_index].getPrice())
                 else:
                     ask_price = "0.00"
             else:
