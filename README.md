@@ -1,6 +1,6 @@
 # Trading Exchange
 
-This is a trading program created using python programming. It uses an object oriented approach to easily create new functions to the application. 
+This is a trading program created using python. It uses an object oriented approach to easily create new orderes in the application. 
 Right now, this application can handle limit, market orders and it can display your bid, ask and last prices for each individual stock. 
 It doesn't connect to any API to gather stock information, but that will be part of any future updates to the application
 
