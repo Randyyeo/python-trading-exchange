@@ -22,7 +22,15 @@ cd python-trading-exchange
 ## Running the Application 
 
 ```bash
-python app.py
+python exchange.py
+```
+
+## Testing the Application 
+There are already a few test cases used to test the application. Feel free to add more test cases to try it out yourself
+
+```bash
+pip install pytest
+pytest limit_orders_integration_test.py
 ```
 
 ## Specific commands
