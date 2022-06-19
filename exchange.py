@@ -5,7 +5,10 @@ sys.path.append(os.getcwd() + '/classes')
 sys.path.append(os.getcwd() + '/helper_functions')
 
 # Helper Functions
-from Order import Order  # Order class
+from Buy_Market_Order import Buy_Market_Order
+from Sell_Market_Order import Sell_Market_Order
+from Buy_Limit_Order import Buy_Limit_Order
+from Sell_Limit_Order import Sell_Limit_Order  # Order class
 from limit_transactions import limit_buy  # Buy limit orders
 from limit_transactions import limit_sell  # Sell limit orders
 from market_transactions import market_buy  # Buy market orders
@@ -36,120 +39,122 @@ while not status:
 
     input_string = input("ACTION: ")
     list_str = input_string.split(" ")
-    try:
-        action = list_str[0]
+    
+    action = list_str[0]
 
-        # View Orders
-        if action == "VIEW":
-            i = 1
-            for order in orders:
-                print(f"{i}. {order.logg()}")
-                i += 1
+    # View Orders
+    if action == "VIEW":
+        i = 1
+        for order in orders:
+            print(f"{i}. {order.logg()}")
+            i += 1
 
-        # Buy Orders        
-        elif action == "BUY":
-            stock = list_str[1]
-            type = list_str[2]
+    # Buy Orders        
+    elif action == "BUY":
+        stock = list_str[1]
+        type = list_str[2]
 
-            # Buy Limit Order
-            if type == "LMT":
-                # Error command validations
-                if "$" not in list_str[3] or len(list_str) != 5:
-                    print(f"Your limit order is not in the correct format.")
-                else:
-                    price = round(float(list_str[3][1:]), 2)
-                    amount = int(list_str[4])
-                    order = Order(action, stock, type, price, amount)
-                    limit_buy(order, sell, last)
-
-                    if order.getStatus() != "FILLED":
-                        index = sort_buy(order, mkt_buy_index, buy)
-                        mkt_buy_index = index
-
-                    orders.append(order)
-                    order.print()
-
-            # Buy Market Order
+        # Buy Limit Order
+        if type == "LMT":
+            # Error command validations
+            if "$" not in list_str[3] or len(list_str) != 5:
+                print(f"Your limit order is not in the correct format.")
             else:
-                amount = int(list_str[3])
-                order = Order(action, stock, type, None, amount)
-                market_buy(order, sell, last)  
+                price = round(float(list_str[3][1:]), 2)
+                amount = int(list_str[4])
+                order = Buy_Limit_Order(action, stock, type, price, amount)
+                order.execute(sell, last)
+
                 if order.getStatus() != "FILLED":
-                    index = sort_buy(order, mkt_buy_index, buy)
+                    index = order.sort(mkt_buy_index, buy)
                     mkt_buy_index = index
+
                 orders.append(order)
                 order.print()
 
-        # Sell Orders
-        elif action == "SELL":
-            stock = list_str[1]
-            type = list_str[2]
+        # Buy Market Order
+        else:
+            amount = int(list_str[3])
+            order = Buy_Market_Order(action, stock, type, None, amount)
+            order.execute(sell, last)  
 
-            # Sell Limit Order
-            if type == "LMT":
-                # Error command validations
-                if "$" not in list_str[3] or len(list_str) != 5:
-                    print(f"Your limit order is not in the correct format.")
-                else:
-                    price = round(float(list_str[3][1:]), 2)
-                    amount = int(list_str[4])
-                    order = Order(action, stock, type, price, amount)
-                    limit_sell(order, buy, last)
-                    if order.getStatus() != "FILLED":
-                        index = sort_sell(order, mkt_sell_index, sell)
-                        mkt_sell_index = index
-                    orders.append(order)
-                    order.print()
+            if order.getStatus() != "FILLED":
+                index = order.sort(mkt_buy_index, buy)
+                mkt_buy_index = index
+            orders.append(order)
+            order.print()
 
-            # Sell Market Order   
+    # Sell Orders
+    elif action == "SELL":
+        stock = list_str[1]
+        type = list_str[2]
+
+        # Sell Limit Order
+        if type == "LMT":
+            # Error command validations
+            if "$" not in list_str[3] or len(list_str) != 5:
+                print(f"Your limit order is not in the correct format.")
             else:
-                amount = int(list_str[3])
-                order = Order(action, stock, type, None, amount)
-                market_sell(order, buy, last)
+                price = round(float(list_str[3][1:]), 2)
+                amount = int(list_str[4])
+                order = Sell_Limit_Order(action, stock, type, price, amount)
+                order.execute(buy, last)
                 if order.getStatus() != "FILLED":
-                    index = sort_sell(order, mkt_sell_index, sell)
+                    index = order.sort(mkt_sell_index, sell)
                     mkt_sell_index = index
                 orders.append(order)
                 order.print()
 
-        # Exit Client
-        elif action == "QUIT":
-            status = True
+        # Sell Market Order   
+        else:
+            amount = int(list_str[3])
+            order = Sell_Market_Order(action, stock, type, None, amount)
+            order.execute(buy, last)
+            if order.getStatus() != "FILLED":
+                index = order.sort(order, mkt_sell_index, sell)
+                mkt_sell_index = index
+            orders.append(order)
+            order.print()
 
-        # Quote orders
-        elif action == "QUOTE":
-            stock = list_str[1]
-            # Check if the stock exists
-            if stock in buy and len(buy[stock]) != 0:
-                if buy[stock][mkt_buy_index[stock]].getPrice() != None:
-                    bid_price = float(buy[stock][mkt_buy_index[stock]].getPrice())
-                else:
-                    bid_price = "0.00"
+    # Exit Client
+    elif action == "QUIT":
+        status = True
+
+    # Quote orders
+    elif action == "QUOTE":
+        stock = list_str[1]
+        # Check if the stock exists
+        if stock in buy and len(buy[stock]) != 0:
+            if len(buy[stock]) > mkt_buy_index[stock] or buy[stock][mkt_buy_index[stock]].getPrice() != None:
+                bid_price = float(buy[stock][mkt_buy_index[stock]].getPrice())
             else:
                 bid_price = "0.00"
-            
-            if stock in sell and len(sell[stock]) != 0:
-                if sell[stock][mkt_sell_index[stock]].getPrice() != None:
-                    ask_price = float(sell[stock][mkt_sell_index[stock]].getPrice())
-                else:
-                    ask_price = "0.00"
+        else:
+            bid_price = "0.00"
+
+        if stock in sell and len(sell[stock]) != 0:
+            if len(sell[stock]) > mkt_sell_index[stock] or sell[stock][mkt_sell_index[stock]].getPrice() != None:
+                ask_price = float(sell[stock][mkt_sell_index[stock]].getPrice())
             else:
                 ask_price = "0.00"
-
-            if stock in last:
-                last_price = float(last[stock])
-            else:
-                last_price = "0.00"
-            print(f"{stock} BID: ${bid_price} " +   
-                f"ASK: ${ask_price} LAST: ${last_price}")
         else:
-            print("Command not found. Do note" +
-                "that the commands are case sensitive")
-            print()
-        
+            ask_price = "0.00"
+
+        if stock in last:
+            last_price = float(last[stock])
+        else:
+            last_price = "0.00"
+
+        print(f"{stock} BID: ${bid_price} " +   
+            f"ASK: ${ask_price} LAST: ${last_price}")
+    else:
+        print("Command not found. Do note" +
+            "that the commands are case sensitive")
         print()
-    except:
+    
+    print()
+    """ except:
         print("Command not found. Do note that the commands are case sensitive")
-        print()
+        print() """
     
 

@@ -19,17 +19,6 @@ class Order:
             else:
                 return f"{self.action} {self.stock} {self.type} ${str(self.price)} {self.current}/{self.amount} {self.status}"
 
-    def print(self):
-        if self.type == "MKT":
-            print(f"You have placed a market order for {self.amount} {self.stock} shares")
-        else:
-            
-            dot_index = str(self.price).find(".")
-            if len(str(self.price)[dot_index+1:]) == 1:
-                print(f"You have placed a limit order for {self.amount} {self.stock} shares at ${self.price}0 each")
-            else:
-                print(f"You have placed a limit order for {self.amount} {self.stock} shares at ${self.price} each")
-
     def getCurrent(self):
         return self.current
 
