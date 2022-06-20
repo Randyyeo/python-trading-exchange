@@ -3,6 +3,15 @@ from Buy_Order import Buy_Order
 
 class Buy_Limit_Order(Limit_Order, Buy_Order):
     
+    def __init__(self, stock, price, amount):
+        self.action = "BUY"
+        self.stock = stock
+        self.type = "LMT"
+        self.price = price
+        self.amount = amount 
+        self.current = 0
+        self.status = "PENDING"
+
     def execute(self, sell, last):
         """
         This function performs a limit buy order

@@ -2,6 +2,15 @@ from Market_Order import Market_Order
 from Sell_Order import Sell_Order
 
 class Sell_Market_Order(Market_Order, Sell_Order):
+
+    def __init__(self, stock, amount):
+        self.action = "SELL"
+        self.stock = stock
+        self.type = "MKT"
+        self.price = None
+        self.amount = amount 
+        self.current = 0
+        self.status = "PENDING"
     
     def execute(self, buy, last):
         """

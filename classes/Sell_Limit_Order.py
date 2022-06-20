@@ -3,6 +3,15 @@ from Sell_Order import Sell_Order
 
 class Sell_Limit_Order(Limit_Order, Sell_Order):
     
+    def __init__(self, stock, price, amount):
+        self.action = "SELL"
+        self.stock = stock
+        self.type = "LMT"
+        self.price = price
+        self.amount = amount 
+        self.current = 0
+        self.status = "PENDING"
+
     def execute(self, buy, last):
         """
         This function performs a limit sell order

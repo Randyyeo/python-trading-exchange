@@ -22,14 +22,14 @@ cd python-trading-exchange
 ## Running the Application 
 
 ```bash
-python exchange.py
+python3 exchange.py
 ```
 
 ## Testing the Application 
 There are already a few test cases used to test the application. Feel free to add more test cases to try it out yourself
 
 ```bash
-pip install pytest
+pip3 install pytest
 pytest limit_orders_integration_test.py
 ```
 

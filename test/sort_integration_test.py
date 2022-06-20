@@ -77,3 +77,20 @@ def test_no_bid_price_with_two_market_orders():
     buy_market_two.sort(mkt_buy_index, buy)
 
     assert len(buy["FB"]) == mkt_buy_index["FB"]
+
+def test_no_ask_price_with_two_market_orders():
+    buy = {}
+    sell = {}
+    last = {}
+    mkt_sell_index = {}  
+    
+    sell_market_one = Sell_Market_Order("FB", 5)
+    sell_market_two = Sell_Market_Order("FB", 10)
+
+    sell_market_one.execute(buy, last)
+    sell_market_one.sort(mkt_sell_index, sell)
+
+    sell_market_two.execute(buy, last)
+    sell_market_two.sort(mkt_sell_index, sell)
+
+    assert len(sell["FB"]) == mkt_sell_index["FB"]

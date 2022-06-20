@@ -9,7 +9,7 @@ class Order:
         self.status = "PENDING"
 
     # Printing out the order placed
-    def logg(self):
+    def view(self):
         if self.price == None:
             return f"{self.action} {self.stock} {self.type} {self.current}/{self.amount} {self.status}"
         else:
