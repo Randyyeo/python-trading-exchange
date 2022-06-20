@@ -4,11 +4,11 @@ import pytest
 sys.path.append(os.getcwd() + '/../classes')
 sys.path.append(os.getcwd() + '/../helper_functions')
 
-# Helper Functions
-from Order import Order # Order class
-from limit_transactions import limit_buy, limit_sell # Functions for selling/buying limit orders
-from market_transactions import market_buy, market_sell # Functions for selling/buying market orders
-from sort import sort_buy, sort_sell # Sorting the buying and selling queue after each transaction
+# Order classes
+from Buy_Market_Order import Buy_Market_Order
+from Sell_Market_Order import Sell_Market_Order
+from Buy_Limit_Order import Buy_Limit_Order
+from Sell_Limit_Order import Sell_Limit_Order
 
 def test_get_correct_bid_price_with_two_market_orders_then_two_limit_orders():
     buy = {}
@@ -16,23 +16,22 @@ def test_get_correct_bid_price_with_two_market_orders_then_two_limit_orders():
     last = {}
     mkt_buy_index = {}  
     
+    buy_market_one = Buy_Market_Order("FB", 5)
+    buy_market_two = Buy_Market_Order("FB", 10)
+    buy_limit_one = Buy_Limit_Order("FB", 20.00, 5)
+    buy_limit_two = Buy_Limit_Order("FB", 30.00, 10)
 
-    buy_market_one = Order("BUY", "FB", "MKT", None, 5)
-    buy_market_two = Order("BUY", "FB", "MKT", None, 10)
-    buy_limit_one = Order("BUY", "FB", "LMT", 20.00, 5)
-    buy_limit_two = Order("BUY", "FB", "LMT", 30.00, 10)
+    buy_market_one.execute(sell, last)
+    buy_market_one.sort(mkt_buy_index, buy)
 
-    market_buy(buy_market_one, sell, last)
-    sort_buy(buy_market_one, mkt_buy_index, buy)
+    buy_market_two.execute(sell, last)
+    buy_market_two.sort(mkt_buy_index, buy)
 
-    market_buy(buy_market_two, sell, last)
-    sort_buy(buy_market_two, mkt_buy_index, buy)
+    buy_limit_one.execute(sell, last)
+    buy_limit_one.sort(mkt_buy_index, buy)
 
-    limit_buy(buy_limit_one, sell, last)
-    sort_buy(buy_limit_one, mkt_buy_index, buy)
-
-    limit_buy(buy_limit_two, sell, last)
-    sort_buy(buy_limit_two, mkt_buy_index, buy)
+    buy_limit_two.execute(sell, last)
+    buy_limit_two.sort(mkt_buy_index, buy)
 
     assert buy["FB"][mkt_buy_index["FB"]].getPrice() == 30
     
@@ -43,22 +42,38 @@ def test_get_correct_ask_price_with_two_market_orders_then_two_limit_orders():
     last = {}
     mkt_sell_index = {}
 
-    sell_market_one = Order("BUY", "FB", "MKT", None, 5)
-    sell_market_two = Order("BUY", "FB", "MKT", None, 10)
-    sell_limit_one = Order("BUY", "FB", "LMT", 20.00, 5)
-    sell_limit_two = Order("BUY", "FB", "LMT", 30.00, 10)
+    sell_market_one = Sell_Market_Order("FB", 5)
+    sell_market_two = Sell_Market_Order("FB", 10)
+    sell_limit_one = Sell_Limit_Order("FB", 20.00, 5)
+    sell_limit_two = Sell_Limit_Order("FB", 30.00, 10)
 
-    market_sell(sell_market_one, buy, last)
-    sort_sell(sell_market_one, mkt_sell_index, sell)
+    sell_market_one.execute(buy, last)
+    sell_market_one.sort(mkt_sell_index, sell)
 
-    market_sell(sell_market_two, buy, last)
-    sort_sell(sell_market_two, mkt_sell_index, sell)
+    sell_market_two.execute(buy, last)
+    sell_market_two.sort(mkt_sell_index, sell)
 
-    limit_sell(sell_limit_one, buy, last)
-    sort_sell(sell_limit_one, mkt_sell_index, sell)
+    sell_limit_one.execute(buy, last)
+    sell_limit_one.sort(mkt_sell_index, sell)
 
-    limit_sell(sell_limit_two, buy, last)
-    sort_sell(sell_limit_two, mkt_sell_index, sell)
+    sell_limit_two.execute(buy, last)
+    sell_limit_two.sort(mkt_sell_index, sell)
 
     assert sell["FB"][mkt_sell_index["FB"]].getPrice() == 20
     
+def test_no_bid_price_with_two_market_orders():
+    buy = {}
+    sell = {}
+    last = {}
+    mkt_buy_index = {}  
+    
+    buy_market_one = Buy_Market_Order("FB", 5)
+    buy_market_two = Buy_Market_Order("FB", 10)
+
+    buy_market_one.execute(sell, last)
+    buy_market_one.sort(mkt_buy_index, buy)
+
+    buy_market_two.execute(sell, last)
+    buy_market_two.sort(mkt_buy_index, buy)
+
+    assert len(buy["FB"]) == mkt_buy_index["FB"]
