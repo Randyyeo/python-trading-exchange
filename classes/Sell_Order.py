@@ -13,7 +13,10 @@ class Sell_Order(Order):
         stock = self.getStock()
         # Check if stock has been ordered before
         if stock not in index:
-            index[stock] = 1 # one stock in the sell pending orders
+            if self.getType() == "MKT":
+                index[stock] = 1
+            else:
+                index[stock] = 0 # one stock in the sell pending orders
         # Check if stock is in the queue
         if stock not in sell:
             sell[stock] = [self]

@@ -13,7 +13,10 @@ class Buy_Order(Order):
         
         stock = self.getStock()
         if stock not in index:
-            index[stock] = 1 # One order in the buy pending orders
+            if self.getType() == "MKT":
+                index[stock] = 1
+            else:
+                index[stock] = 0 # One order in the buy pending orders
         # Check if stock is in the queue
         if stock not in buy:
             buy[stock] = [self]

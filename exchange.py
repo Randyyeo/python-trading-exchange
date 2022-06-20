@@ -9,13 +9,7 @@ from Buy_Market_Order import Buy_Market_Order
 from Sell_Market_Order import Sell_Market_Order
 from Buy_Limit_Order import Buy_Limit_Order
 from Sell_Limit_Order import Sell_Limit_Order  # Order class
-from limit_transactions import limit_buy  # Buy limit orders
-from limit_transactions import limit_sell  # Sell limit orders
-from market_transactions import market_buy  # Buy market orders
-from market_transactions import market_sell  # Sell market orders
-from sort import sort_buy  # Sort buy queue after each transaction
-from sort import sort_sell  # Sort sell queue  after each transaction
-
+from quote_orders.py import quote_orders
 
 # Data variables
 orders = []  # Source of Truth for all orders that have been placed
@@ -111,7 +105,7 @@ while not status:
             order = Sell_Market_Order(action, stock, type, None, amount)
             order.execute(buy, last)
             if order.getStatus() != "FILLED":
-                index = order.sort(order, mkt_sell_index, sell)
+                index = order.sort(mkt_sell_index, sell)
                 mkt_sell_index = index
             orders.append(order)
             order.print()
@@ -123,27 +117,8 @@ while not status:
     # Quote orders
     elif action == "QUOTE":
         stock = list_str[1]
-        # Check if the stock exists
-        if stock in buy and len(buy[stock]) != 0:
-            if len(buy[stock]) > mkt_buy_index[stock] or buy[stock][mkt_buy_index[stock]].getPrice() != None:
-                bid_price = float(buy[stock][mkt_buy_index[stock]].getPrice())
-            else:
-                bid_price = "0.00"
-        else:
-            bid_price = "0.00"
 
-        if stock in sell and len(sell[stock]) != 0:
-            if len(sell[stock]) > mkt_sell_index[stock] or sell[stock][mkt_sell_index[stock]].getPrice() != None:
-                ask_price = float(sell[stock][mkt_sell_index[stock]].getPrice())
-            else:
-                ask_price = "0.00"
-        else:
-            ask_price = "0.00"
-
-        if stock in last:
-            last_price = float(last[stock])
-        else:
-            last_price = "0.00"
+        bid_price, ask_price, last_price = quote_orders(stock, buy, mkt_buy_index, sell, mkt_sell_index, last)
 
         print(f"{stock} BID: ${bid_price} " +   
             f"ASK: ${ask_price} LAST: ${last_price}")
